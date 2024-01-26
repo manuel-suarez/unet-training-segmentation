@@ -70,7 +70,7 @@ unet = smp.Unet(
 	encoder_weights='imagenet',
 	classes=1,
 	activation=None
-)
+).to(config.DEVICE)
 
 # initialize loss function and optimizer
 lossFunc = BCEWithLogitsLoss()
