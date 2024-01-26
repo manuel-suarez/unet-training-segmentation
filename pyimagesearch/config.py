@@ -28,7 +28,7 @@ NUM_LEVELS = 5
 # batch size
 INIT_LR = 0.001
 NUM_EPOCHS = 40
-BATCH_SIZE = 64
+BATCH_SIZE = 32
 
 # define the input image dimensions
 INPUT_IMAGE_WIDTH = 572
