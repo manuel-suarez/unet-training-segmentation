@@ -53,6 +53,7 @@ print(f"[INFO] found {len(trainDS)} examples in the training set...")
 print(f"[INFO] found {len(testDS)} examples in the test set...")
 
 def train_model(unet, version):
+	unet.to(config.DEVICE)
 	# create the training and test data loaders
 	trainLoader = DataLoader(trainDS, shuffle=True,
 		batch_size=config.BATCH_SIZE, pin_memory=config.PIN_MEMORY,
@@ -162,5 +163,5 @@ unet = smp.Unet(
 	encoder_weights='imagenet',
 	classes=1,
 	activation=None
-).to(config.DEVICE)
+)
 train_model(unet, "smp")
