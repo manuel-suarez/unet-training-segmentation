@@ -102,7 +102,7 @@ class UNet(Module):
 		self.retainDim = retainDim
 		self.outSize = outSize
 
-def forward(self, x):
+	def forward(self, x):
 		# grab the features from the encoder
 		encFeatures = self.encoder(x)
 
