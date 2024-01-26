@@ -76,17 +76,17 @@ def make_predictions(model, imagePath):
         # prepare a plot for visualization
         prepare_plot(orig, gtMask, predMask)
 
-    # load the image paths in our testing file and randomly select 10
-    # image paths
-    print("[INFO] loading up test image paths...")
-    imagePaths = open(config.TEST_PATHS).read().strip().split("\n")
-    imagePaths = np.random.choice(imagePaths, size=10)
+# load the image paths in our testing file and randomly select 10
+# image paths
+print("[INFO] loading up test image paths...")
+imagePaths = open(config.TEST_PATHS).read().strip().split("\n")
+imagePaths = np.random.choice(imagePaths, size=10)
 
-    # load our model from disk and flash it to the current device
-    print("[INFO] load up model...")
-    unet = torch.load(config.MODEL_PATH).to(config.DEVICE)
+# load our model from disk and flash it to the current device
+print("[INFO] load up model...")
+unet = torch.load(config.MODEL_PATH).to(config.DEVICE)
 
-    # iterate over the randomly selected test image paths
-    for path in imagePaths:
-        # make predictions and visualize the results
-        make_predictions(unet, path)
+# iterate over the randomly selected test image paths
+for path in imagePaths:
+    # make predictions and visualize the results
+    make_predictions(unet, path)
