@@ -78,3 +78,7 @@ if __name__ == "__main__":
     decoder = Decoder()
     x = torch.randn(1, 1024, 28, 28)
     print(decoder(x, ftrs[::-1][1:]).shape)
+
+    unet = UNet()
+    x = torch.randn(1, 3, 572, 572)
+    print(unet(x).shape)
