@@ -153,10 +153,10 @@ def train_model(unet, version):
 	torch.save(unet, MODEL_PATH)
 
 # initialize our UNet model and train
-train_model(model_v1.UNet(), "v1")
-train_model(model_v2.UNet(), "v2")
-train_model(model_v3.build_unet(), "v3")
-train_model(model_v4.UNet(), "v4")
+#train_model(model_v1.UNet(), "v1")
+#train_model(model_v2.UNet(), "v2")
+#train_model(model_v3.build_unet(), "v3")
+#train_model(model_v4.UNet(), "v4")
 #unet = UNet().to(config.DEVICE)
 unet = smp.Unet(
 	encoder_name='resnet34',
