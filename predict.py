@@ -9,7 +9,7 @@ import torch
 import cv2
 import os
 
-def prepare_plot(origImage, origMask, predMask):
+def prepare_plot(i, origImage, origMask, predMask):
     # initialize our figure
     figure, ax = plt.subplots(nrows=1, ncols=3, figsize=(10, 10))
 
@@ -25,10 +25,12 @@ def prepare_plot(origImage, origMask, predMask):
 
     # set the layout of the figure and display it
     figure.tight_layout()
-    figure.show()
+    #figure.show()
+    plt.savefig(f"result_{i}.png")
+    plt.close()
 
 
-def make_predictions(model, imagePath):
+def make_predictions(i, model, imagePath):
     # set model to evaluation mode
     model.eval()
 
@@ -74,7 +76,7 @@ def make_predictions(model, imagePath):
         predMask = predMask.astype(np.uint8)
 
         # prepare a plot for visualization
-        prepare_plot(orig, gtMask, predMask)
+        prepare_plot(i, orig, gtMask, predMask)
 
 # load the image paths in our testing file and randomly select 10
 # image paths
@@ -87,6 +89,6 @@ print("[INFO] load up model...")
 unet = torch.load(config.MODEL_PATH).to(config.DEVICE)
 
 # iterate over the randomly selected test image paths
-for path in imagePaths:
+for i, path in enumerate(imagePaths):
     # make predictions and visualize the results
-    make_predictions(unet, path)
+    make_predictions(i, unet, path)
