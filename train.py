@@ -3,7 +3,8 @@
 
 # import the necessary packages
 from pyimagesearch.dataset import SegmentationDataset
-from pyimagesearch.model_v1 import UNet
+#from pyimagesearch.model_v1 import UNet
+from pyimagesearch.model_v2 import UNet
 from pyimagesearch import config
 from torch.nn import BCEWithLogitsLoss
 from torch.optim import Adam
