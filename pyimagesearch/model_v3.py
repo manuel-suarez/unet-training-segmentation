@@ -71,8 +71,8 @@ class build_unet(nn.Module):
         """ Encoder """
         s1, p1 = self.e1(inputs)
         s2, p2 = self.e2(p1)
-        s3, p3 = self.e3(s2)
-        s4, p4 = self.e4(s3)
+        s3, p3 = self.e3(p2)
+        s4, p4 = self.e4(p3)
 
         """ Bottleneck """
         b = self.b(p4)
