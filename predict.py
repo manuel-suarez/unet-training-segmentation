@@ -26,7 +26,7 @@ def prepare_plot(i, origImage, origMask, predMask):
     # set the layout of the figure and display it
     figure.tight_layout()
     #figure.show()
-    plt.savefig(f"result_{i}.png")
+    plt.savefig(os.path.join("output", f"result_{i}.png"))
     plt.close()
 
 
