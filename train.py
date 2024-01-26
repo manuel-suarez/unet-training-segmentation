@@ -6,7 +6,8 @@ from pyimagesearch.dataset import SegmentationDataset
 #from pyimagesearch.model_v1 import UNet
 #from pyimagesearch.model_v2 import UNet
 #from pyimagesearch.model_v3 import build_unet
-from pyimagesearch.model_v4 import UNet
+#from pyimagesearch.model_v4 import UNet
+import segmentation_models_pytorch as smp
 from pyimagesearch import config
 from torch.nn import BCEWithLogitsLoss
 from torch.optim import Adam
@@ -63,7 +64,13 @@ testLoader = DataLoader(testDS, shuffle=False,
 	num_workers=os.cpu_count())
 
 # initialize our UNet model
-unet = UNet().to(config.DEVICE)
+#unet = UNet().to(config.DEVICE)
+unet = smp.Unet(
+	encoder_name='resnet34',
+	encoder_weights='imagenet',
+	classes=1,
+	activation=None
+)
 
 # initialize loss function and optimizer
 lossFunc = BCEWithLogitsLoss()
