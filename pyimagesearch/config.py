@@ -28,11 +28,11 @@ NUM_LEVELS = 5
 # batch size
 INIT_LR = 0.001
 NUM_EPOCHS = 40
-BATCH_SIZE = 16
+BATCH_SIZE = 64
 
 # define the input image dimensions
-INPUT_IMAGE_WIDTH = 388
-INPUT_IMAGE_HEIGHT = 388
+INPUT_IMAGE_WIDTH = 128
+INPUT_IMAGE_HEIGHT = 128
 
 # define threshold to filter weak predictions
 THRESHOLD = 0.5
