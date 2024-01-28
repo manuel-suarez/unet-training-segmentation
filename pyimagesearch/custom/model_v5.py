@@ -238,6 +238,18 @@ class Decoder(nn.Module):
 
         return x
 
+class UNet(nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.encoder = Encoder()
+        self.decoder = Decoder()
+
+    def forward(self, x):
+        x, r = self.encoder(x)
+        x = self.decoder(x, r)
+
+        return x
+
 if __name__ == '__main__':
     maxpool = nn.MaxPool2d(kernel_size=2, stride=2)
     model = Block1()
@@ -286,3 +298,7 @@ if __name__ == '__main__':
     model = Decoder()
     output = model(output, r)
     print("Decoder: ", output.shape)
+
+    model = UNet()
+    output = model(input)
+    print("UNet: ", output.shape)
