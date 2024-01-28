@@ -94,17 +94,17 @@ class Encoder(nn.Module):
         self.maxpool = nn.MaxPool2d(kernel_size=2, stride=2)
 
     def forward(self, x):
-        x = self.block1(x)
-        x = self.maxpool(x)
-        x = self.block2(x)
-        x = self.maxpool(x)
-        x = self.block3(x)
-        x = self.maxpool(x)
-        x = self.block4(x)
-        x = self.maxpool(x)
+        r1 = self.block1(x)
+        x = self.maxpool(r1)
+        r2 = self.block2(x)
+        x = self.maxpool(r2)
+        r3 = self.block3(x)
+        x = self.maxpool(r3)
+        r4 = self.block4(x)
+        x = self.maxpool(r4)
         x = self.block5(x)
 
-        return x
+        return x, [r1,r2,r3,r4]
 
 
 def crop(x, shape=None):
@@ -222,8 +222,22 @@ class UpBlock1(nn.Module):
 
         return x
 
-class UNet(nn.Module):
-    
+class Decoder(nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.block4 = UpBlock4()
+        self.block3 = UpBlock3()
+        self.block2 = UpBlock2()
+        self.block1 = UpBlock1()
+
+    def forward(self, x, r):
+        x = self.block4(x, r[3])
+        x = self.block3(x, r[2])
+        x = self.block2(x, r[1])
+        x = self.block1(x, r[0])
+
+        return x
+
 if __name__ == '__main__':
     maxpool = nn.MaxPool2d(kernel_size=2, stride=2)
     model = Block1()
@@ -248,7 +262,7 @@ if __name__ == '__main__':
     print("Block 5: ", output5.shape)
 
     model = Encoder()
-    output = model(input)
+    output, _ = model(input)
     print("Encoder: ", output.shape)
 
     model = UpBlock4()
@@ -266,3 +280,9 @@ if __name__ == '__main__':
     model = UpBlock1()
     output = model(output, output1)
     print("Up block 1: ", output.shape)
+
+    model = Encoder()
+    output, r = model(input)
+    model = Decoder()
+    output = model(output, r)
+    print("Decoder: ", output.shape)
