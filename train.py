@@ -3,7 +3,7 @@
 
 # import the necessary packages
 from pyimagesearch.dataset import SegmentationDataset
-from pyimagesearch import model_v1, model_v2, model_v3, model_v4
+from pyimagesearch import model_v1, model_v2, model_v3, model_v4, model_v5
 import segmentation_models_pytorch as smp
 from pyimagesearch import config
 from torch.nn import BCEWithLogitsLoss
@@ -158,10 +158,11 @@ def train_model(unet, version):
 #train_model(model_v3.build_unet(), "v3")
 #train_model(model_v4.UNet(), "v4")
 #unet = UNet().to(config.DEVICE)
-unet = smp.Unet(
-	encoder_name='resnet34',
-	encoder_weights='imagenet',
-	classes=1,
-	activation=None
-)
-train_model(unet, "smp")
+#unet = smp.Unet(
+#	encoder_name='resnet34',
+#	encoder_weights='imagenet',
+#	classes=1,
+#	activation=None
+#)
+#train_model(unet, "smp")
+train_model(model_v5.UNet(), "v5")

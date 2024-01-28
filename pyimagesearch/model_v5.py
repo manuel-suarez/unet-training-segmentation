@@ -197,6 +197,33 @@ class UpBlock2(nn.Module):
 
         return x
 
+class UpBlock1(nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.upsampling = nn.Upsample(size=(393,393))
+        self.upconv1 = nn.Conv2d(in_channels=128, out_channels=64, kernel_size=2)
+        # concatenation
+        self.conv1 = nn.Conv2d(in_channels=128, out_channels=64, kernel_size=3)
+        self.relu1 = nn.ReLU()
+        self.conv2 = nn.Conv2d(in_channels=64, out_channels=64, kernel_size=3)
+        self.relu2 = nn.ReLU()
+        self.conv3 = nn.Conv2d(in_channels=64, out_channels=2, kernel_size=1)
+
+    def forward(self, x, r):
+        x = self.upsampling(x)
+        x = self.upconv1(x)
+        r = crop(r, x.shape)
+        x = torch.cat([x, r], dim=1)
+        x = self.conv1(x)
+        x = self.relu1(x)
+        x = self.conv2(x)
+        x = self.relu2(x)
+        x = self.conv3(x)
+
+        return x
+
+class UNet(nn.Module):
+    
 if __name__ == '__main__':
     maxpool = nn.MaxPool2d(kernel_size=2, stride=2)
     model = Block1()
@@ -235,3 +262,7 @@ if __name__ == '__main__':
     model = UpBlock2()
     output = model(output, output2)
     print("Up block 2: ", output.shape)
+
+    model = UpBlock1()
+    output = model(output, output1)
+    print("Up block 1: ", output.shape)
