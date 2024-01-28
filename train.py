@@ -3,8 +3,7 @@
 
 # import the necessary packages
 from pyimagesearch.dataset import SegmentationDataset
-from pyimagesearch import model_v1, model_v2, model_v3, model_v4, model_v5
-import segmentation_models_pytorch as smp
+from pyimagesearch.custom import model_v5
 from pyimagesearch import config
 from torch.nn import BCEWithLogitsLoss
 from torch.optim import Adam
