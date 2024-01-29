@@ -253,7 +253,7 @@ class UNet(nn.Module):
 if __name__ == '__main__':
     maxpool = nn.MaxPool2d(kernel_size=2, stride=2)
     model = Block1()
-    input = torch.randn((1, 1, 572, 572))
+    input = torch.randn((1, 3, 572, 572))
     output1 = model(input)
     print("Block 1: ", output1.shape)
 
