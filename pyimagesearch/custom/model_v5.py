@@ -6,7 +6,7 @@ class Block1(nn.Module):
     def __init__(self):
         super().__init__()
         # First encoder block
-        self.conv1 = nn.Conv2d(in_channels=1, out_channels=64, kernel_size=3)
+        self.conv1 = nn.Conv2d(in_channels=3, out_channels=64, kernel_size=3)
         self.relu1 = nn.ReLU()
         self.conv2 = nn.Conv2d(in_channels=64, out_channels=64, kernel_size=3)
         self.relu2 = nn.ReLU()
