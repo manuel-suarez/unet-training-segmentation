@@ -31,8 +31,8 @@ NUM_EPOCHS = 40
 BATCH_SIZE = 64
 
 # define the input image dimensions
-INPUT_IMAGE_WIDTH = 128
-INPUT_IMAGE_HEIGHT = 128
+INPUT_IMAGE_WIDTH = 252
+INPUT_IMAGE_HEIGHT = 252
 
 # define threshold to filter weak predictions
 THRESHOLD = 0.5
