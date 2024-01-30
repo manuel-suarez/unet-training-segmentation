@@ -3,7 +3,7 @@
 
 # import the necessary packages
 from models.dataset import SegmentationDataset
-from models.custom import model_v6
+from models.unet import model_v6
 from models import config
 from torch.nn import BCEWithLogitsLoss
 from torch.optim import Adam
