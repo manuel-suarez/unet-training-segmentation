@@ -72,12 +72,15 @@ class SegmentationHead(nn.Module):
         return x
 
 class Decoder(nn.Module):
-    def __init__(self):
+    def __init__(self, input_size=28):
         super().__init__()
-        self.block4 = DecoderUpBlock(upsample_size=29, in_channels=1024, out_channels=512)
-        self.block3 = DecoderUpBlock(upsample_size=57, in_channels=512, out_channels=256)
-        self.block2 = DecoderUpBlock(upsample_size=113, in_channels=256, out_channels=128)
-        self.block1 = DecoderUpBlock(upsample_size=225, in_channels=128, out_channels=64)
+        self.block4 = DecoderUpBlock(upsample_size=input_size+1, in_channels=1024, out_channels=512)
+        input_size = input_size * 2
+        self.block3 = DecoderUpBlock(upsample_size=input_size+1, in_channels=512, out_channels=256)
+        input_size = input_size * 2
+        self.block2 = DecoderUpBlock(upsample_size=input_size+1, in_channels=256, out_channels=128)
+        input_size = input_size * 2
+        self.block1 = DecoderUpBlock(upsample_size=input_size+1, in_channels=128, out_channels=64)
         self.head = SegmentationHead()
 
     def forward(self, x, r):
@@ -90,10 +93,14 @@ class Decoder(nn.Module):
         return x
 
 class UNet(nn.Module):
-    def __init__(self):
+    def __init__(self, input_size=224):
         super().__init__()
         self.encoder = Encoder()
-        self.decoder = Decoder()
+        # Num of layers 4
+        input_size = input_size // 2
+        input_size = input_size // 2
+        input_size = input_size // 2
+        self.decoder = Decoder(input_size)
 
     def forward(self, x):
         x, r = self.encoder(x)
@@ -239,19 +246,19 @@ if __name__ == '__main__':
     output, _ = model(input)
     print("Encoder: ", output.shape)
 
-    model = UpBlock4()
+    model = Decoder().block4
     output = model(output, output4)
     print("Up block 4: ", output.shape)
 
-    model = UpBlock3()
+    model = Decoder().block3
     output = model(output, output3)
     print("Up block 3: ", output.shape)
 
-    model = UpBlock2()
+    model = Decoder().block2
     output = model(output, output2)
     print("Up block 2: ", output.shape)
 
-    model = UpBlock1()
+    model = Decoder().block1
     output = model(output, output1)
     print("Up block 1: ", output.shape)
 
