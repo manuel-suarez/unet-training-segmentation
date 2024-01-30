@@ -34,6 +34,9 @@ BATCH_SIZE = 64
 INPUT_IMAGE_WIDTH = 252
 INPUT_IMAGE_HEIGHT = 252
 
+LABEL_IMAGE_WIDTH = 68
+LABEL_IMAGE_HEIGHT = 68
+
 # define threshold to filter weak predictions
 THRESHOLD = 0.5
 

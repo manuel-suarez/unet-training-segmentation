@@ -3,12 +3,13 @@ from torch.utils.data import Dataset
 import cv2
 
 class SegmentationDataset(Dataset):
-	def __init__(self, imagePaths, maskPaths, transforms):
+	def __init__(self, imagePaths, maskPaths, image_transforms, mask_transforms):
 		# store the image and mask filepaths, and augmentation
 		# transforms
 		self.imagePaths = imagePaths
 		self.maskPaths = maskPaths
-		self.transforms = transforms
+		self.image_transforms = image_transforms
+		self.mask_transforms = mask_transforms
 
 	def __len__(self):
 		# return the number of total samples contained in the dataset
@@ -25,10 +26,11 @@ class SegmentationDataset(Dataset):
 		mask = cv2.imread(self.maskPaths[idx], 0)
 
 		# check to see if we are applying any transformations
-		if self.transforms is not None:
+		if self.image_transforms is not None:
 			# apply the transformations to both image and its mask
-			image = self.transforms(image)
-			mask = self.transforms(mask)
+			image = self.image_transforms(image)
+		if self.mask_transforms is not None:
+			mask = self.mask_transforms(mask)
 
 		# return a tuple of the image and its mask
 		return (image, mask)

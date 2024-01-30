@@ -38,16 +38,20 @@ f.write("\n".join(testImages))
 f.close()
 
 # define transformations
-transforms = transforms.Compose([transforms.ToPILImage(),
+input_transforms = transforms.Compose([transforms.ToPILImage(),
  	transforms.Resize((config.INPUT_IMAGE_HEIGHT,
 		config.INPUT_IMAGE_WIDTH)),
+	transforms.ToTensor()])
+label_transforms = transforms.Compose([transforms.ToPILImage(),
+ 	transforms.Resize((config.LABEL_IMAGE_HEIGHT,
+		config.LABEL_IMAGE_WIDTH)),
 	transforms.ToTensor()])
 
 # create the train and test datasets
 trainDS = SegmentationDataset(imagePaths=trainImages, maskPaths=trainMasks,
-	transforms=transforms)
+	image_transforms=input_transforms, mask_transforms=label_transforms)
 testDS = SegmentationDataset(imagePaths=testImages, maskPaths=testMasks,
-    transforms=transforms)
+    image_transforms=input_transforms, mask_transforms=label_transforms)
 print(f"[INFO] found {len(trainDS)} examples in the training set...")
 print(f"[INFO] found {len(testDS)} examples in the test set...")
 
