@@ -118,7 +118,6 @@ class UpBlock1(nn.Module):
         self.relu1 = nn.ReLU()
         self.conv2 = nn.Conv2d(in_channels=64, out_channels=64, kernel_size=3, padding=1)
         self.relu2 = nn.ReLU()
-        self.conv3 = nn.Conv2d(in_channels=64, out_channels=2, kernel_size=1)
 
     def forward(self, x, r):
         x = self.upsampling(x)
@@ -128,8 +127,15 @@ class UpBlock1(nn.Module):
         x = self.relu1(x)
         x = self.conv2(x)
         x = self.relu2(x)
-        x = self.conv3(x)
 
+        return x
+
+class SegmentationHead(nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.conv = nn.Conv2d(in_channels=64, out_channels=1, kernel_size=1)
+    def forward(self, x):
+        x = self.conv(x)
         return x
 
 class Decoder(nn.Module):
@@ -139,12 +145,14 @@ class Decoder(nn.Module):
         self.block3 = UpBlock3()
         self.block2 = UpBlock2()
         self.block1 = UpBlock1()
+        self.head = SegmentationHead()
 
     def forward(self, x, r):
         x = self.block4(x, r[3])
         x = self.block3(x, r[2])
         x = self.block2(x, r[1])
         x = self.block1(x, r[0])
+        x = self.head(x)
 
         return x
 
@@ -238,30 +246,30 @@ class TestDecoder(unittest.TestCase):
         self.assertEqual(output.shape, (1, 64, 224, 224))
 
     def test_segmentation_head(self):
-        input = torch.randn((1, 64, 388, 388))
+        input = torch.randn((1, 64, 224, 224))
         output = SegmentationHead()(input)
-        self.assertEqual(output.shape, (1, 1, 388, 388))
+        self.assertEqual(output.shape, (1, 1, 224, 224))
 
     def test_decoder_blocks(self):
-        input = torch.randn((1, 3, 572, 572))
+        input = torch.randn((1, 1, 224, 224))
         output, skips = Encoder()(input)
 
         output = Decoder().block4(output, skips[3])
-        self.assertEqual(output.shape, (1, 512, 52, 52))
+        self.assertEqual(output.shape, (1, 512, 28, 28))
         output = Decoder().block3(output, skips[2])
-        self.assertEqual(output.shape, (1, 256, 100, 100))
+        self.assertEqual(output.shape, (1, 256, 56, 56))
         output = Decoder().block2(output, skips[1])
-        self.assertEqual(output.shape, (1, 128, 196, 196))
+        self.assertEqual(output.shape, (1, 128, 112, 112))
         output = Decoder().block1(output, skips[0])
-        self.assertEqual(output.shape, (1, 64, 388, 388))
+        self.assertEqual(output.shape, (1, 64, 224, 224))
         output = SegmentationHead()(output)
-        self.assertEqual(output.shape, (1, 1, 388, 388))
+        self.assertEqual(output.shape, (1, 1, 224, 224))
 
     def test_decoder_module(self):
-        input = torch.randn((1, 3, 572, 572))
+        input = torch.randn((1, 1, 224, 224))
         output, r = Encoder()(input)
         output = Decoder()(output, r)
-        self.assertEqual(output.shape, (1, 1, 388, 388))
+        self.assertEqual(output.shape, (1, 1, 224, 224))
 
 class TestUNet(unittest.TestCase):
     def test_unet(self):
