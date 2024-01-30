@@ -96,12 +96,16 @@ class SegmentationHead(nn.Module):
         return x
 
 class Decoder(nn.Module):
-    def __init__(self):
+    def __init__(self, encoder_size=28):
         super().__init__()
-        self.block4 = DecoderUpBlock(upsize=57, in_channels=1024, out_channels=512)
-        self.block3 = DecoderUpBlock(upsize=105, in_channels=512, out_channels=256)
-        self.block2 = DecoderUpBlock(upsize=201, in_channels=256, out_channels=128)
-        self.block1 = DecoderUpBlock(upsize=393, in_channels=128, out_channels=64)
+        encoder_size = encoder_size * 2 + 1
+        self.block4 = DecoderUpBlock(upsize=encoder_size, in_channels=1024, out_channels=512)
+        encoder_size = (encoder_size - 1 - 4) * 2 + 1
+        self.block3 = DecoderUpBlock(upsize=encoder_size, in_channels=512, out_channels=256)
+        encoder_size = (encoder_size - 1 - 4) * 2 + 1
+        self.block2 = DecoderUpBlock(upsize=encoder_size, in_channels=256, out_channels=128)
+        encoder_size = (encoder_size - 1 - 4) * 2 + 1
+        self.block1 = DecoderUpBlock(upsize=encoder_size, in_channels=128, out_channels=64)
         self.head = SegmentationHead()
 
     def forward(self, x, r):
@@ -114,10 +118,12 @@ class Decoder(nn.Module):
         return x
 
 class UNet(nn.Module):
-    def __init__(self):
+    def __init__(self, input_size=572):
         super().__init__()
         self.encoder = Encoder()
-        self.decoder = Decoder()
+        # 5 levels of encoder block's
+        encoder_size = (((((((input_size - 4) // 2) - 4) // 2) - 4) // 2) - 4) // 2 - 4
+        self.decoder = Decoder(encoder_size=encoder_size)
 
     def forward(self, x):
         x, r = self.encoder(x)
@@ -253,24 +259,24 @@ class UNetTestSuite(unittest.TestSuite):
 
 if __name__ == '__main__':
     maxpool = nn.MaxPool2d(kernel_size=2, stride=2)
-    model = Block1()
+    model = Encoder().block1
     input = torch.randn((1, 3, 572, 572))
     output1 = model(input)
     print("Block 1: ", output1.shape)
 
-    model = Block2()
+    model = Encoder().block2
     output2 = model(maxpool(output1))
     print("Block 2: ", output2.shape)
 
-    model = Block3()
+    model = Encoder().block3
     output3 = model(maxpool(output2))
     print("Block 3: ", output3.shape)
 
-    model = Block4()
+    model = Encoder().block4
     output4 = model(maxpool(output3))
     print("Block 4: ", output4.shape)
 
-    model = Block5()
+    model = Encoder().block5
     output5 = model(maxpool(output4))
     print("Block 5: ", output5.shape)
 
@@ -278,19 +284,19 @@ if __name__ == '__main__':
     output, _ = model(input)
     print("Encoder: ", output.shape)
 
-    model = UpBlock4()
+    model = Decoder().block4
     output = model(output, output4)
     print("Up block 4: ", output.shape)
 
-    model = UpBlock3()
+    model = Decoder().block3
     output = model(output, output3)
     print("Up block 3: ", output.shape)
 
-    model = UpBlock2()
+    model = Decoder().block2
     output = model(output, output2)
     print("Up block 2: ", output.shape)
 
-    model = UpBlock1()
+    model = Decoder().block1
     output = model(output, output1)
     print("Up block 1: ", output.shape)
 
