@@ -260,7 +260,7 @@ class UNetTestSuite(unittest.TestSuite):
 if __name__ == '__main__':
     maxpool = nn.MaxPool2d(kernel_size=2, stride=2)
     model = Encoder().block1
-    input = torch.randn((1, 3, 572, 572))
+    input = torch.randn((1, 3, 252, 252))
     output1 = model(input)
     print("Block 1: ", output1.shape)
 
@@ -284,29 +284,29 @@ if __name__ == '__main__':
     output, _ = model(input)
     print("Encoder: ", output.shape)
 
-    model = Decoder().block4
+    model = Decoder(8).block4
     output = model(output, output4)
     print("Up block 4: ", output.shape)
 
-    model = Decoder().block3
+    model = Decoder(8).block3
     output = model(output, output3)
     print("Up block 3: ", output.shape)
 
-    model = Decoder().block2
+    model = Decoder(8).block2
     output = model(output, output2)
     print("Up block 2: ", output.shape)
 
-    model = Decoder().block1
+    model = Decoder(8).block1
     output = model(output, output1)
     print("Up block 1: ", output.shape)
 
     model = Encoder()
     output, r = model(input)
-    model = Decoder()
+    model = Decoder(8)
     output = model(output, r)
     print("Decoder: ", output.shape)
 
-    model = UNet()
+    model = UNet(252)
     output = model(input)
     print("UNet: ", output.shape)
 

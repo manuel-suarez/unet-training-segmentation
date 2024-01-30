@@ -164,4 +164,4 @@ def train_model(unet, version):
 #	activation=None
 #)
 #train_model(unet, "smp")
-train_model(model_v5.UNet(), "v5")
+train_model(model_v5.UNet(config.INPUT_IMAGE_HEIGHT), "v5")
