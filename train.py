@@ -75,7 +75,8 @@ def train_model(unet, version):
 	testSteps = len(testDS) // config.BATCH_SIZE
 
 	# initialize a dictionary to store training history
-	H = {"train_loss": [], "test_loss": [], "train_acc": []}
+	H = {"train_loss": [], "test_loss": [],
+		 "train_acc": [], "test_acc": []}
 
 	# loop over epochs
 	print(f"[INFO] training the network {version}...")
@@ -88,7 +89,8 @@ def train_model(unet, version):
 		totalTrainLoss = 0
 		totalTestLoss = 0
 		# metrics
-		totalAcc = 0
+		totalTrainAcc = 0
+		totalTestAcc = 0
 
 		# loop over the training set
 		for (i, (x, y)) in enumerate(trainLoader):
@@ -105,24 +107,10 @@ def train_model(unet, version):
 			loss.backward()
 			opt.step()
 
-			output = pred.view(-1, )
-			target = y.view(-1, ).float()
-
-			tp = torch.sum(output * target)  # TP
-			fp = torch.sum(output * (1 - target))  # FP
-			fn = torch.sum((1 - output) * target)  # FN
-			tn = torch.sum((1 - output) * (1 - target))  # TN
-
-			eps = 1e-5
-			pixel_acc = (tp + tn + eps) / (tp + tn + fp + fn + eps)
-			#dice = (2 * tp + self.eps) / (2 * tp + fp + fn + self.eps)
-			#precision = (tp + self.eps) / (tp + fp + self.eps)
-			#recall = (tp + self.eps) / (tp + fn + self.eps)
-			#specificity = (tn + self.eps) / (tn + fp + self.eps)
-
+			acc = (pred.round() == y).float().mean()
 			# add the loss to the total training loss so far
-			totalAcc += pixel_acc
 			totalTrainLoss += loss
+			totalTrainAcc += acc
 
 		# switch off autograd
 		with torch.no_grad():
@@ -138,16 +126,21 @@ def train_model(unet, version):
 				pred = unet(x)
 				totalTestLoss += lossFunc(pred, y)
 
+				acc = (pred.round() == y).float().mean()
+				totalTestAcc += acc
+
 		# calculate the average training and validation loss
 		avgTrainLoss = totalTrainLoss / trainSteps
 		avgTestLoss = totalTestLoss / testSteps
 		# calculate the average metrics
-		avgTrainAcc = totalAcc / testSteps
+		avgTrainAcc = totalTrainAcc / testSteps
+		avgTestAcc = totalTestAcc / testSteps
 
 		# update our training history
 		H["train_loss"].append(avgTrainLoss.cpu().detach().numpy())
 		H["test_loss"].append(avgTestLoss.cpu().detach().numpy())
 		H["train_acc"].append(avgTrainAcc.cpu().detach().numpy())
+		H["test_acc"].append(avgTestAcc.cpu().detach().numpy())
 
 		# print the model training and validation information, metrics
 		print("[INFO] EPOCH: {}/{}".format(e + 1, config.NUM_EPOCHS))
