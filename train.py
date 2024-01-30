@@ -2,9 +2,9 @@
 # python train.py
 
 # import the necessary packages
-from pyimagesearch.dataset import SegmentationDataset
-from pyimagesearch.custom import model_v6
-from pyimagesearch import config
+from models.dataset import SegmentationDataset
+from models.custom import model_v6
+from models import config
 from torch.nn import BCEWithLogitsLoss
 from torch.optim import Adam
 from torch.utils.data import DataLoader
