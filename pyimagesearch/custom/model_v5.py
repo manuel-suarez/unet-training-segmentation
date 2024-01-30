@@ -20,34 +20,14 @@ class EncoderBlock(nn.Module):
         return x
 
 # Encoder block
-class Block1(EncoderBlock):
-    def __init__(self):
-        super().__init__(3, 64)
-
-class Block2(EncoderBlock):
-    def __init__(self):
-        super().__init__(64, 128)
-
-class Block3(EncoderBlock):
-    def __init__(self):
-        super().__init__(128, 256)
-
-class Block4(EncoderBlock):
-    def __init__(self):
-        super().__init__(256, 512)
-
-class Block5(EncoderBlock):
-    def __init__(self):
-        super().__init__(512, 1024)
-
 class Encoder(nn.Module):
     def __init__(self):
         super().__init__()
-        self.block1 = Block1()
-        self.block2 = Block2()
-        self.block3 = Block3()
-        self.block4 = Block4()
-        self.block5 = Block5()
+        self.block1 = EncoderBlock(in_channels=3, out_channels=64)
+        self.block2 = EncoderBlock(in_channels=64, out_channels=128)
+        self.block3 = EncoderBlock(in_channels=128, out_channels=256)
+        self.block4 = EncoderBlock(in_channels=256, out_channels=512)
+        self.block5 = EncoderBlock(in_channels=512, out_channels=1024)
         self.maxpool = nn.MaxPool2d(kernel_size=2, stride=2)
 
     def forward(self, x):
@@ -171,50 +151,50 @@ class TestEncoder(unittest.TestCase):
     def test_encoder_block1(self):
         block_size = self.input_size
         input = torch.randn((1, self.input_channels, block_size, block_size))
-        output = Block1()(input)
+        output = Encoder().block1(input)
         self.assertEqual(output.shape, (1, self.block_channels[0], block_size - 4, block_size - 4))
 
     def test_encoder_block2(self):
         block_size = (self.input_size - 4) // 2
         input = torch.randn((1, self.block_channels[0], block_size, block_size))
-        output = Block2()(input)
+        output = Encoder().block2(input)
         self.assertEqual(output.shape, (1, self.block_channels[1], block_size - 4, block_size - 4))
 
     def test_encoder_block3(self):
         block_size = (((self.input_size - 4) // 2) - 4) // 2
         input = torch.randn((1, self.block_channels[1], block_size, block_size))
-        output = Block3()(input)
+        output = Encoder().block3(input)
         self.assertEqual(output.shape, (1, self.block_channels[2], block_size - 4, block_size - 4))
 
     def test_encoder_block4(self):
         block_size = (((((self.input_size - 4) // 2) - 4) // 2) - 4) // 2
         input = torch.randn((1, self.block_channels[2], block_size, block_size))
-        output = Block4()(input)
+        output = Encoder().block4(input)
         self.assertEqual(output.shape, (1, self.block_channels[3], block_size - 4, block_size - 4))
 
     def test_encoder_block5(self):
         block_size = (((((((self.input_size - 4) // 2) - 4) // 2) - 4) // 2) - 4) // 2
         input = torch.randn((1, self.block_channels[3], block_size, block_size))
-        output = Block5()(input)
+        output = Encoder().block5(input)
         self.assertEqual(output.shape, (1, self.block_channels[4], block_size - 4, block_size - 4))
 
     def test_encoder_blocks(self):
         input = torch.randn((1, self.input_channels, self.input_size, self.input_size))
         maxpool = nn.MaxPool2d(kernel_size=2, stride=2)
 
-        output1 = Block1()(input)
+        output1 = Encoder().block1(input)
         block_size = self.input_size - 4
         self.assertEqual(output1.shape, (1, self.block_channels[0], block_size, block_size))
-        output2 = Block2()(maxpool(output1))
+        output2 = Encoder().block2(maxpool(output1))
         block_size = block_size // 2 - 4
         self.assertEqual(output2.shape, (1, self.block_channels[1], block_size, block_size))
-        output3 = Block3()(maxpool(output2))
+        output3 = Encoder().block3(maxpool(output2))
         block_size = block_size // 2 - 4
         self.assertEqual(output3.shape, (1, self.block_channels[2], block_size, block_size))
-        output4 = Block4()(maxpool(output3))
+        output4 = Encoder().block4(maxpool(output3))
         block_size = block_size // 2 - 4
         self.assertEqual(output4.shape, (1, self.block_channels[3], block_size, block_size))
-        output5 = Block5()(maxpool(output4))
+        output5 = Encoder().block5(maxpool(output4))
         block_size = block_size // 2 - 4
         self.assertEqual(output5.shape, (1, self.block_channels[4], block_size, block_size))
 
