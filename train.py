@@ -75,7 +75,7 @@ def train_model(unet, version):
 	testSteps = len(testDS) // config.BATCH_SIZE
 
 	# initialize a dictionary to store training history
-	H = {"train_loss": [], "test_loss": []}
+	H = {"train_loss": [], "test_loss": [], "train_acc": []}
 
 	# loop over epochs
 	print(f"[INFO] training the network {version}...")
