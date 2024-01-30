@@ -1,6 +1,7 @@
 # Own scratch implementation
 import torch
 import torch.nn as nn
+import unittest
 
 class Block1(nn.Module):
     def __init__(self):
@@ -250,6 +251,110 @@ class UNet(nn.Module):
 
         return x
 
+
+class TestEncoder(unittest.TestCase):
+    def test_encoder_block1(self):
+        input = torch.randn((1, 3, 572, 572))
+        output = Block1()(input)
+        self.assertEqual(output.shape, (1, 64, 568, 568))
+
+    def test_encoder_block2(self):
+        input = torch.randn((1, 64, 568//2, 568//2))
+        output = Block2()(input)
+        self.assertEqual(output.shape, (1, 128, 280, 280))
+
+    def test_encoder_block3(self):
+        input = torch.rand((1, 128, 280//2, 280//2))
+        output = Block3()(input)
+        self.assertEqual(output.shape, (1, 256, 136, 136))
+
+    def test_encoder_block4(self):
+        input = torch.rand((1, 256, 136//2, 136//2))
+        output = Block4()(input)
+        self.assertEqual(output.shape, (1, 512, 64, 64))
+
+    def test_encoder_block5(self):
+        input = torch.rand((1, 512, 64//2, 64//2))
+        output = Block5()(input)
+        self.assertEqual(output.shape, (1, 1024, 28, 28))
+
+    def test_encoder_blocks(self):
+        input = torch.randn((1, 3, 572, 572))
+        maxpool = nn.MaxPool2d(kernel_size=2, stride=2)
+
+        output1 = Block1()(input)
+        self.assertEqual(output1.shape, (1, 64, 568, 568))
+        output2 = Block2()(maxpool(output1))
+        self.assertEqual(output2.shape, (1, 128, 280, 280))
+        output3 = Block3()(maxpool(output2))
+        self.assertEqual(output3.shape, (1, 256, 136, 136))
+        output4 = Block4()(maxpool(output3))
+        self.assertEqual(output4.shape, (1, 512, 64, 64))
+        output5 = Block5()(maxpool(output4))
+        self.assertEqual(output5.shape, (1, 1024, 28, 28))
+
+    def test_encoder_module(self):
+        input = torch.randn((1, 3, 572, 572))
+        output, _ = Encoder()(input)
+        self.assertEqual(output.shape, (1, 1024, 28, 28))
+
+class TestDecoder(unittest.TestCase):
+    def test_decoder_upblock4(self):
+        input = torch.randn((1, 1024, 28, 28))
+        skip = torch.rand((1, 512, 64, 64))
+        output = UpBlock4()(input, skip)
+        self.assertEqual(output.shape, (1, 512, 52, 52))
+
+    def test_decoder_upblock3(self):
+        input = torch.randn((1, 512, 64, 64))
+        skip = torch.rand((1, 256, 136, 136))
+        output = UpBlock3()(input, skip)
+        self.assertEqual(output.shape, (1, 256, 100, 100))
+
+    def test_decoder_upblock2(self):
+        input = torch.randn((1, 256, 100, 100))
+        skip = torch.rand((1, 128, 280, 280))
+        output = UpBlock2()(input, skip)
+        self.assertEqual(output.shape, (1, 128, 196, 196))
+
+    def test_decoder_upblock1(self):
+        input = torch.randn((1, 128, 196, 196))
+        skip = torch.rand((1, 64, 568, 568))
+        output = UpBlock1()(input, skip)
+        self.assertEqual(output.shape, (1, 2, 388, 388))
+
+    def test_decoder_blocks(self):
+        input = torch.randn((1, 3, 572, 572))
+        output, skips = Encoder()(input)
+
+        output = UpBlock4()(output, skips[3])
+        self.assertEqual(output.shape, (1, 512, 52, 52))
+        output = UpBlock3()(output, skips[2])
+        self.assertEqual(output.shape, (1, 256, 100, 100))
+        output = UpBlock2()(output, skips[1])
+        self.assertEqual(output.shape, (1, 128, 196, 196))
+        output = UpBlock1()(output, skips[0])
+        self.assertEqual(output.shape, (1, 2, 388, 388))
+
+    def test_decoder_module(self):
+        input = torch.randn((1, 3, 572, 572))
+        output, r = Encoder()(input)
+        output = Decoder()(output, r)
+        self.assertEqual(output.shape, (1, 2, 388, 388))
+
+class TestUNet(unittest.TestCase):
+    def test_unet(self):
+        model = UNet()
+        input = torch.randn((1, 3, 572, 572))
+        output = model(input)
+        self.assertEqual(output.shape, (1, 2, 388, 388))
+
+class UNetTestSuite(unittest.TestSuite):
+    def __init__(self):
+        super(self).__init__()
+        self.addTest(TestEncoder())
+        self.addTest(TestDecoder())
+
 if __name__ == '__main__':
     maxpool = nn.MaxPool2d(kernel_size=2, stride=2)
     model = Block1()
@@ -302,3 +407,5 @@ if __name__ == '__main__':
     model = UNet()
     output = model(input)
     print("UNet: ", output.shape)
+
+    unittest.main()
