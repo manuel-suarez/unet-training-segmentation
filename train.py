@@ -3,7 +3,7 @@
 
 # import the necessary packages
 from pyimagesearch.dataset import SegmentationDataset
-from pyimagesearch.custom import model_v5
+from pyimagesearch.custom import model_v6
 from pyimagesearch import config
 from torch.nn import BCEWithLogitsLoss
 from torch.optim import Adam
@@ -168,4 +168,4 @@ def train_model(unet, version):
 #	activation=None
 #)
 #train_model(unet, "smp")
-train_model(model_v5.UNet(config.INPUT_IMAGE_HEIGHT), "v5")
+train_model(model_v6.UNet(config.INPUT_IMAGE_HEIGHT), "v6")
