@@ -1,76 +1,13 @@
 import torch
 import torch.nn as nn
+import unittest
 
-class Block1(nn.Module):
-    def __init__(self):
+class EncoderBlock(nn.Module):
+    def __init__(self, in_channels=1, out_channels=64, kernel_size=3, padding=1):
         super().__init__()
-        self.conv1 = nn.Conv2d(in_channels=1, out_channels=64, kernel_size=3, padding=1)
+        self.conv1 = nn.Conv2d(in_channels=in_channels, out_channels=out_channels, kernel_size=kernel_size, padding=padding)
         self.relu1 = nn.ReLU()
-        self.conv2 = nn.Conv2d(in_channels=64, out_channels=64, kernel_size=3, padding=1)
-        self.relu2 = nn.ReLU()
-
-    def forward(self, x):
-        x = self.conv1(x)
-        x = self.relu1(x)
-        x = self.conv2(x)
-        x = self.relu2(x)
-
-        return x
-
-class Block2(nn.Module):
-    def __init__(self):
-        super().__init__()
-        self.conv1 = nn.Conv2d(in_channels=64, out_channels=128, kernel_size=3, padding=1)
-        self.relu1 = nn.ReLU()
-        self.conv2 = nn.Conv2d(in_channels=128, out_channels=128, kernel_size=3, padding=1)
-        self.relu2 = nn.ReLU()
-
-    def forward(self, x):
-        x = self.conv1(x)
-        x = self.relu1(x)
-        x = self.conv2(x)
-        x = self.relu2(x)
-
-        return x
-
-class Block3(nn.Module):
-    def __init__(self):
-        super().__init__()
-        self.conv1 = nn.Conv2d(in_channels=128, out_channels=256, kernel_size=3, padding=1)
-        self.relu1 = nn.ReLU()
-        self.conv2 = nn.Conv2d(in_channels=256, out_channels=256, kernel_size=3, padding=1)
-        self.relu2 = nn.ReLU()
-
-    def forward(self, x):
-        x = self.conv1(x)
-        x = self.relu1(x)
-        x = self.conv2(x)
-        x = self.relu2(x)
-
-        return x
-
-class Block4(nn.Module):
-    def __init__(self):
-        super().__init__()
-        self.conv1 = nn.Conv2d(in_channels=256, out_channels=512, kernel_size=3, padding=1)
-        self.relu1 = nn.ReLU()
-        self.conv2 = nn.Conv2d(in_channels=512, out_channels=512, kernel_size=3, padding=1)
-        self.relu2 = nn.ReLU()
-
-    def forward(self, x):
-        x = self.conv1(x)
-        x = self.relu1(x)
-        x = self.conv2(x)
-        x = self.relu2(x)
-
-        return x
-
-class Block5(nn.Module):
-    def __init__(self):
-        super().__init__()
-        self.conv1 = nn.Conv2d(in_channels=512, out_channels=1024, kernel_size=3, padding=1)
-        self.relu1 = nn.ReLU()
-        self.conv2 = nn.Conv2d(in_channels=1024, out_channels=1024, kernel_size=3, padding=1)
+        self.conv2 = nn.Conv2d(in_channels=out_channels, out_channels=out_channels, kernel_size=kernel_size, padding=padding)
         self.relu2 = nn.ReLU()
 
     def forward(self, x):
@@ -84,11 +21,11 @@ class Block5(nn.Module):
 class Encoder(nn.Module):
     def __init__(self):
         super().__init__()
-        self.block1 = Block1()
-        self.block2 = Block2()
-        self.block3 = Block3()
-        self.block4 = Block4()
-        self.block5 = Block5()
+        self.block1 = EncoderBlock(in_channels=1, out_channels=64)
+        self.block2 = EncoderBlock(in_channels=64, out_channels=128)
+        self.block3 = EncoderBlock(in_channels=128, out_channels=256)
+        self.block4 = EncoderBlock(in_channels=256, out_channels=512)
+        self.block5 = EncoderBlock(in_channels=512, out_channels=1024)
         self.maxpool = nn.MaxPool2d(kernel_size=2, stride=2)
 
     def forward(self, x):
@@ -223,6 +160,116 @@ class UNet(nn.Module):
 
         return x
 
+class TestEncoder(unittest.TestCase):
+    def setUp(self):
+        self.input_channels = 1
+        self.input_size = 224
+        self.block_channels = [64, 128, 256, 512, 1024]
+        self.block_sizes = [224, 112, 56, 28, 14]
+
+    def test_encoder_block1(self):
+        input = torch.randn((1, 1, self.block_sizes[0], self.block_sizes[0]))
+        output = Encoder().block1(input)
+        self.assertEqual(output.shape, (1, self.block_channels[0], self.block_sizes[0], self.block_sizes[0]))
+
+    def test_encoder_block2(self):
+        input = torch.randn((1, self.block_channels[0], self.block_sizes[1], self.block_sizes[1]))
+        output = Encoder().block2(input)
+        self.assertEqual(output.shape, (1, self.block_channels[1], self.block_sizes[1], self.block_sizes[1]))
+
+    def test_encoder_block3(self):
+        input = torch.randn((1, self.block_channels[1], self.block_sizes[2], self.block_sizes[2]))
+        output = Encoder().block3(input)
+        self.assertEqual(output.shape, (1, self.block_channels[2], self.block_sizes[2], self.block_sizes[2]))
+
+    def test_encoder_block4(self):
+        input = torch.randn((1, self.block_channels[2], self.block_sizes[3], self.block_sizes[3]))
+        output = Encoder().block4(input)
+        self.assertEqual(output.shape, (1, self.block_channels[3], self.block_sizes[3], self.block_sizes[3]))
+
+    def test_encoder_block5(self):
+        input = torch.randn((1, self.block_channels[3], self.block_sizes[4], self.block_sizes[4]))
+        output = Encoder().block5(input)
+        self.assertEqual(output.shape, (1, self.block_channels[4], self.block_sizes[4], self.block_sizes[4]))
+
+    def test_encoder_blocks(self):
+        input = torch.randn((1, self.input_channels, self.input_size, self.input_size))
+        maxpool = nn.MaxPool2d(kernel_size=2, stride=2)
+
+        output1 = Encoder().block1(input)
+        self.assertEqual(output1.shape, (1, self.block_channels[0], self.block_sizes[0], self.block_sizes[0]))
+        output2 = Encoder().block2(maxpool(output1))
+        self.assertEqual(output2.shape, (1, self.block_channels[1], self.block_sizes[1], self.block_sizes[1]))
+        output3 = Encoder().block3(maxpool(output2))
+        self.assertEqual(output3.shape, (1, self.block_channels[2], self.block_sizes[2], self.block_sizes[2]))
+        output4 = Encoder().block4(maxpool(output3))
+        self.assertEqual(output4.shape, (1, self.block_channels[3], self.block_sizes[3], self.block_sizes[3]))
+        output5 = Encoder().block5(maxpool(output4))
+        self.assertEqual(output5.shape, (1, self.block_channels[4], self.block_sizes[4], self.block_sizes[4]))
+
+    def test_encoder_module(self):
+        input = torch.randn((1, 1, 224, 224))
+        output, _ = Encoder()(input)
+        self.assertEqual(output.shape, (1, 1024, 14, 14))
+
+class TestDecoder(unittest.TestCase):
+    def test_decoder_upblock4(self):
+        input = torch.randn((1, 1024, 14, 14))
+        skip = torch.rand((1, 512, 28, 28))
+        output = Decoder().block4(input, skip)
+        self.assertEqual(output.shape, (1, 512, 28, 28))
+
+    def test_decoder_upblock3(self):
+        input = torch.randn((1, 512, 28, 28))
+        skip = torch.rand((1, 256, 56, 56))
+        output = Decoder().block3(input, skip)
+        self.assertEqual(output.shape, (1, 256, 56, 56))
+
+    def test_decoder_upblock2(self):
+        input = torch.randn((1, 256, 56, 56))
+        skip = torch.rand((1, 128, 112, 112))
+        output = Decoder().block2(input, skip)
+        self.assertEqual(output.shape, (1, 128, 112, 112))
+
+    def test_decoder_upblock1(self):
+        input = torch.randn((1, 128, 112, 112))
+        skip = torch.rand((1, 64, 224, 224))
+        output = Decoder().block1(input, skip)
+        self.assertEqual(output.shape, (1, 64, 224, 224))
+
+    def test_segmentation_head(self):
+        input = torch.randn((1, 64, 388, 388))
+        output = SegmentationHead()(input)
+        self.assertEqual(output.shape, (1, 1, 388, 388))
+
+    def test_decoder_blocks(self):
+        input = torch.randn((1, 3, 572, 572))
+        output, skips = Encoder()(input)
+
+        output = Decoder().block4(output, skips[3])
+        self.assertEqual(output.shape, (1, 512, 52, 52))
+        output = Decoder().block3(output, skips[2])
+        self.assertEqual(output.shape, (1, 256, 100, 100))
+        output = Decoder().block2(output, skips[1])
+        self.assertEqual(output.shape, (1, 128, 196, 196))
+        output = Decoder().block1(output, skips[0])
+        self.assertEqual(output.shape, (1, 64, 388, 388))
+        output = SegmentationHead()(output)
+        self.assertEqual(output.shape, (1, 1, 388, 388))
+
+    def test_decoder_module(self):
+        input = torch.randn((1, 3, 572, 572))
+        output, r = Encoder()(input)
+        output = Decoder()(output, r)
+        self.assertEqual(output.shape, (1, 1, 388, 388))
+
+class TestUNet(unittest.TestCase):
+    def test_unet(self):
+        model = UNet()
+        input = torch.randn((1, 3, 572, 572))
+        output = model(input)
+        self.assertEqual(output.shape, (1, 1, 388, 388))
+
 if __name__ == '__main__':
     maxpool = nn.MaxPool2d(kernel_size=2, stride=2)
     input = torch.randn((1, 1, 224, 224))
@@ -276,3 +323,5 @@ if __name__ == '__main__':
     model = UNet()
     output = model(input)
     print("UNet: ", output.shape)
+
+    unittest.main()
