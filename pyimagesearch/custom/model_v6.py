@@ -41,15 +41,15 @@ class Encoder(nn.Module):
 
         return x, [r1,r2,r3,r4]
 
-class UpBlock4(nn.Module):
-    def __init__(self):
+class DecoderUpBlock(nn.Module):
+    def __init__(self, upsample_size, in_channels, out_channels, kernel_size=3, padding=1):
         super().__init__()
-        self.upsampling = nn.Upsample(size=(29,29))
-        self.upconv1 = nn.Conv2d(in_channels=1024, out_channels=512, kernel_size=2)
+        self.upsampling = nn.Upsample(size=(upsample_size,upsample_size))
+        self.upconv1 = nn.Conv2d(in_channels=in_channels, out_channels=out_channels, kernel_size=2)
         # concatenation
-        self.conv1 = nn.Conv2d(in_channels=1024, out_channels=512, kernel_size=3, padding=1)
+        self.conv1 = nn.Conv2d(in_channels=in_channels, out_channels=out_channels, kernel_size=kernel_size, padding=padding)
         self.relu1 = nn.ReLU()
-        self.conv2 = nn.Conv2d(in_channels=512, out_channels=512, kernel_size=3, padding=1)
+        self.conv2 = nn.Conv2d(in_channels=out_channels, out_channels=out_channels, kernel_size=kernel_size, padding=padding)
         self.relu2 = nn.ReLU()
 
 
@@ -63,73 +63,6 @@ class UpBlock4(nn.Module):
         x = self.relu2(x)
 
         return x
-
-class UpBlock3(nn.Module):
-    def __init__(self):
-        super().__init__()
-        self.upsampling = nn.Upsample(size=(57,57))
-        self.upconv1 = nn.Conv2d(in_channels=512, out_channels=256, kernel_size=2)
-        # concatenation
-        self.conv1 = nn.Conv2d(in_channels=512, out_channels=256, kernel_size=3, padding=1)
-        self.relu1 = nn.ReLU()
-        self.conv2 = nn.Conv2d(in_channels=256, out_channels=256, kernel_size=3, padding=1)
-        self.relu2 = nn.ReLU()
-
-    def forward(self, x, r):
-        x = self.upsampling(x)
-        x = self.upconv1(x)
-        x = torch.cat([x, r], dim=1)
-        x = self.conv1(x)
-        x = self.relu1(x)
-        x = self.conv2(x)
-        x = self.relu2(x)
-
-        return x
-
-class UpBlock2(nn.Module):
-    def __init__(self):
-        super().__init__()
-        self.upsampling = nn.Upsample(size=(113,113))
-        self.upconv1 = nn.Conv2d(in_channels=256, out_channels=128, kernel_size=2)
-        # concatenation
-        self.conv1 = nn.Conv2d(in_channels=256, out_channels=128, kernel_size=3, padding=1)
-        self.relu1 = nn.ReLU()
-        self.conv2 = nn.Conv2d(in_channels=128, out_channels=128, kernel_size=3, padding=1)
-        self.relu2 = nn.ReLU()
-
-    def forward(self, x, r):
-        x = self.upsampling(x)
-        x = self.upconv1(x)
-        x = torch.cat([x, r], dim=1)
-        x = self.conv1(x)
-        x = self.relu1(x)
-        x = self.conv2(x)
-        x = self.relu2(x)
-
-        return x
-
-class UpBlock1(nn.Module):
-    def __init__(self):
-        super().__init__()
-        self.upsampling = nn.Upsample(size=(225,225))
-        self.upconv1 = nn.Conv2d(in_channels=128, out_channels=64, kernel_size=2)
-        # concatenation
-        self.conv1 = nn.Conv2d(in_channels=128, out_channels=64, kernel_size=3, padding=1)
-        self.relu1 = nn.ReLU()
-        self.conv2 = nn.Conv2d(in_channels=64, out_channels=64, kernel_size=3, padding=1)
-        self.relu2 = nn.ReLU()
-
-    def forward(self, x, r):
-        x = self.upsampling(x)
-        x = self.upconv1(x)
-        x = torch.cat([x, r], dim=1)
-        x = self.conv1(x)
-        x = self.relu1(x)
-        x = self.conv2(x)
-        x = self.relu2(x)
-
-        return x
-
 class SegmentationHead(nn.Module):
     def __init__(self):
         super().__init__()
@@ -141,10 +74,10 @@ class SegmentationHead(nn.Module):
 class Decoder(nn.Module):
     def __init__(self):
         super().__init__()
-        self.block4 = UpBlock4()
-        self.block3 = UpBlock3()
-        self.block2 = UpBlock2()
-        self.block1 = UpBlock1()
+        self.block4 = DecoderUpBlock(upsample_size=29, in_channels=1024, out_channels=512)
+        self.block3 = DecoderUpBlock(upsample_size=57, in_channels=512, out_channels=256)
+        self.block2 = DecoderUpBlock(upsample_size=113, in_channels=256, out_channels=128)
+        self.block1 = DecoderUpBlock(upsample_size=225, in_channels=128, out_channels=64)
         self.head = SegmentationHead()
 
     def forward(self, x, r):
@@ -274,31 +207,31 @@ class TestDecoder(unittest.TestCase):
 class TestUNet(unittest.TestCase):
     def test_unet(self):
         model = UNet()
-        input = torch.randn((1, 3, 572, 572))
+        input = torch.randn((1, 1, 224, 224))
         output = model(input)
-        self.assertEqual(output.shape, (1, 1, 388, 388))
+        self.assertEqual(output.shape, (1, 1, 224, 224))
 
 if __name__ == '__main__':
     maxpool = nn.MaxPool2d(kernel_size=2, stride=2)
     input = torch.randn((1, 1, 224, 224))
 
-    model = Block1()
+    model = Encoder().block1
     output1 = model(input)
     print("Block 1: ", output1.shape)
 
-    model = Block2()
+    model = Encoder().block2
     output2 = model(maxpool(output1))
     print("Block 2: ", output2.shape)
 
-    model = Block3()
+    model = Encoder().block3
     output3 = model(maxpool(output2))
     print("Block 3: ", output3.shape)
 
-    model = Block4()
+    model = Encoder().block4
     output4 = model(maxpool(output3))
     print("Block 4: ", output4.shape)
 
-    model = Block5()
+    model = Encoder().block5
     output5 = model(maxpool(output4))
     print("Block 5: ", output5.shape)
 
