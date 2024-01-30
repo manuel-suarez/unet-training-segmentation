@@ -68,6 +68,7 @@ def train_model(unet, version):
 	# initialize loss function and optimizer
 	lossFunc = BCEWithLogitsLoss()
 	opt = Adam(unet.parameters(), lr=config.INIT_LR)
+	# metrics
 
 	# calculate steps per epoch for training and test set
 	trainSteps = len(trainDS) // config.BATCH_SIZE
@@ -86,6 +87,8 @@ def train_model(unet, version):
 		# initialize the total training and validation loss
 		totalTrainLoss = 0
 		totalTestLoss = 0
+		# metrics
+		totalAcc = 0
 
 		# loop over the training set
 		for (i, (x, y)) in enumerate(trainLoader):
@@ -102,7 +105,23 @@ def train_model(unet, version):
 			loss.backward()
 			opt.step()
 
+			output = pred.view(-1, )
+			target = y.view(-1, ).float()
+
+			tp = torch.sum(output * target)  # TP
+			fp = torch.sum(output * (1 - target))  # FP
+			fn = torch.sum((1 - output) * target)  # FN
+			tn = torch.sum((1 - output) * (1 - target))  # TN
+
+			eps = 1e-5
+			pixel_acc = (tp + tn + eps) / (tp + tn + fp + fn + eps)
+			#dice = (2 * tp + self.eps) / (2 * tp + fp + fn + self.eps)
+			#precision = (tp + self.eps) / (tp + fp + self.eps)
+			#recall = (tp + self.eps) / (tp + fn + self.eps)
+			#specificity = (tn + self.eps) / (tn + fp + self.eps)
+
 			# add the loss to the total training loss so far
+			totalAcc += pixel_acc
 			totalTrainLoss += loss
 
 		# switch off autograd
@@ -122,15 +141,18 @@ def train_model(unet, version):
 		# calculate the average training and validation loss
 		avgTrainLoss = totalTrainLoss / trainSteps
 		avgTestLoss = totalTestLoss / testSteps
+		# calculate the average metrics
+		avgTrainAcc = totalAcc / testSteps
 
 		# update our training history
 		H["train_loss"].append(avgTrainLoss.cpu().detach().numpy())
 		H["test_loss"].append(avgTestLoss.cpu().detach().numpy())
+		H["train_acc"].append(avgTrainAcc.cpu().detach().numpy())
 
-		# print the model training and validation information
+		# print the model training and validation information, metrics
 		print("[INFO] EPOCH: {}/{}".format(e + 1, config.NUM_EPOCHS))
-		print("Model {}, Train loss: {:.6f}, Test loss: {:.4f}".format(
-			version, avgTrainLoss, avgTestLoss))
+		print("Model {}, Train loss: {:.6f}, Test loss: {:.4f}, Train acc: {:.6f}".format(
+			version, avgTrainLoss, avgTestLoss, avgTrainAcc))
 
 	# display the total time needed to perform the training
 	endTime = time.time()
