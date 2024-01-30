@@ -66,7 +66,7 @@ class DecoderUpBlock(nn.Module):
 class SegmentationHead(nn.Module):
     def __init__(self):
         super().__init__()
-        self.conv = nn.Conv2d(in_channels=64, out_channels=3, kernel_size=1)
+        self.conv = nn.Conv2d(in_channels=64, out_channels=1, kernel_size=1)
     def forward(self, x):
         x = self.conv(x)
         return x
@@ -188,7 +188,7 @@ class TestDecoder(unittest.TestCase):
     def test_segmentation_head(self):
         input = torch.randn((1, 64, 224, 224))
         output = SegmentationHead()(input)
-        self.assertEqual(output.shape, (1, 3, 224, 224))
+        self.assertEqual(output.shape, (1, 1, 224, 224))
 
     def test_decoder_blocks(self):
         input = torch.randn((1, 3, 224, 224))
@@ -203,20 +203,20 @@ class TestDecoder(unittest.TestCase):
         output = Decoder().block1(output, skips[0])
         self.assertEqual(output.shape, (1, 64, 224, 224))
         output = SegmentationHead()(output)
-        self.assertEqual(output.shape, (1, 3, 224, 224))
+        self.assertEqual(output.shape, (1, 1, 224, 224))
 
     def test_decoder_module(self):
         input = torch.randn((1, 3, 224, 224))
         output, r = Encoder()(input)
         output = Decoder()(output, r)
-        self.assertEqual(output.shape, (1, 3, 224, 224))
+        self.assertEqual(output.shape, (1, 1, 224, 224))
 
 class TestUNet(unittest.TestCase):
     def test_unet(self):
         model = UNet()
         input = torch.randn((1, 3, 224, 224))
         output = model(input)
-        self.assertEqual(output.shape, (1, 3, 224, 224))
+        self.assertEqual(output.shape, (1, 1, 224, 224))
 
 if __name__ == '__main__':
     maxpool = nn.MaxPool2d(kernel_size=2, stride=2)
