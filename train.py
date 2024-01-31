@@ -128,8 +128,8 @@ def train_model(unet, version):
 				pred = unet(x)
 				totalTestLoss += criterion(pred, y)
 
-				pred = pred.detach().numpy()
-				label = y.numpy()
+				pred = pred.cpu().detach().numpy()
+				label = y.cpu.detach().numpy()
 				label = label.reshape((len(label), 1))
 				pred = pred.round()
 
