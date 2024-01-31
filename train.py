@@ -4,13 +4,16 @@
 # import the necessary packages
 from models.dataset import SegmentationDataset
 from models.unet import model_v6
+from models.unetpp import model_v1
 from models import config
 from torch.nn import BCEWithLogitsLoss
 from torch.optim import Adam
 from torch.utils.data import DataLoader
 from sklearn.model_selection import train_test_split
+from sklearn.metrics import accuracy_score
 from torchvision import transforms
 from imutils import paths
+from numpy import vstack
 from tqdm import tqdm
 import matplotlib.pyplot as plt
 import torch
@@ -66,8 +69,8 @@ def train_model(unet, version):
 		num_workers=os.cpu_count())
 
 	# initialize loss function and optimizer
-	lossFunc = BCEWithLogitsLoss()
-	opt = Adam(unet.parameters(), lr=config.INIT_LR)
+	criterion = BCEWithLogitsLoss()
+	optimizer = Adam(unet.parameters(), lr=config.INIT_LR)
 	# metrics
 
 	# calculate steps per epoch for training and test set
@@ -97,20 +100,19 @@ def train_model(unet, version):
 			# send the input to the device
 			(x, y) = (x.to(config.DEVICE), y.to(config.DEVICE))
 
+			# clear the gradients
+			optimizer.zero_grad()
+
 			# perform a forward pass and calculate the training loss
 			pred = unet(x)
-			loss = lossFunc(pred, y)
-
-			# first, zero out any previously accumulated gradients, then
-			# perform backpropagation, and then update model parameters
-			opt.zero_grad()
+			loss = criterion(pred, y)
+			# perform backpropagation
 			loss.backward()
-			opt.step()
+			# update model parameters
+			optimizer.step()
 
-			acc = (pred.round() == y).float().mean()
 			# add the loss to the total training loss so far
 			totalTrainLoss += loss
-			totalTrainAcc += acc
 
 		# switch off autograd
 		with torch.no_grad():
@@ -118,34 +120,41 @@ def train_model(unet, version):
 			unet.eval()
 
 			# loop over the validation set
+			predictions, labels = list(), list()
 			for (x, y) in testLoader:
 				# send the input to the device
 				(x, y) = (x.to(config.DEVICE), y.to(config.DEVICE))
 
 				# make the predictions and calculate the validation loss
 				pred = unet(x)
-				totalTestLoss += lossFunc(pred, y)
+				totalTestLoss += criterion(pred, y)
 
-				acc = (pred.round() == y).float().mean()
-				totalTestAcc += acc
+				pred = pred.detach().numpy()
+				label = y.numpy()
+				label = label.reshape((len(label), 1))
+				pred = pred.round()
+
+				predictions.append(pred)
+				labels.append(label)
+
+		predictions, labels = vstack(predictions), vstack(labels)
+		# calculate accuracy
+		acc = accuracy_score(labels, predictions)
 
 		# calculate the average training and validation loss
 		avgTrainLoss = totalTrainLoss / trainSteps
 		avgTestLoss = totalTestLoss / testSteps
 		# calculate the average metrics
-		avgTrainAcc = totalTrainAcc / testSteps
-		avgTestAcc = totalTestAcc / testSteps
 
 		# update our training history
 		H["train_loss"].append(avgTrainLoss.cpu().detach().numpy())
 		H["test_loss"].append(avgTestLoss.cpu().detach().numpy())
-		H["train_acc"].append(avgTrainAcc.cpu().detach().numpy())
-		H["test_acc"].append(avgTestAcc.cpu().detach().numpy())
+		H["test_acc"].append(acc)
 
 		# print the model training and validation information, metrics
 		print("[INFO] EPOCH: {}/{}".format(e + 1, config.NUM_EPOCHS))
-		print("Model {}, Train loss: {:.6f}, Test loss: {:.4f}, Train acc: {:.6f}".format(
-			version, avgTrainLoss, avgTestLoss, avgTrainAcc))
+		print("Model {}, Train loss: {:.6f}, Test loss: {:.4f}, Test acc: {:.6f}".format(
+			version, avgTrainLoss, avgTestLoss, acc))
 
 	# display the total time needed to perform the training
 	endTime = time.time()
